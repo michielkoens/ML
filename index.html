@@ -31,7 +31,9 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <p></p>
+        <p>&lt;!DOCTYPE html&gt;</p>
+
+<p></p>
 
 <p></p>
 
@@ -87,7 +89,7 @@ code{white-space: pre;}
 <div id="executive-summary">
 <h4>
 <a id="executive-summary" class="anchor" href="#executive-summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Executive Summary</h4>
-<p>This document describes the practical steps to predict activity (column <em>classe</em> in the data) based on a large number of sensor measurements. Using the randomForest package on 70% of the training data results in a model with out of bound (OOB) expected error rate of 0.28. Cross validation on the remaining 30% results in an accuracy of 99.5%. All 20 values in the final test data were predicted correctly.</p>
+<p>This document describes the practical steps to predict activity (column <em>classe</em> in the data) based on a large number of sensor measurements. Using the randomForest package on 70% of the training data results in a model with out of bound (OOB) expected error rate of 0.28%. Cross validation on the remaining 30% results in an accuracy of 99.5% (0.5% error rate). All 20 values in the final test data were predicted correctly.</p>
 </div>
 
 <div id="data-and-data-cleaning">
@@ -159,8 +161,8 @@ modFit</code></pre>
 <a id="2-cross-validation" class="anchor" href="#2-cross-validation" aria-hidden="true"><span class="octicon octicon-link"></span></a>2) Cross Validation</h4>
 <pre><code>pred.test &lt;- predict(modFit, testdata.stripped)
 testdata$predRight &lt;- pred.test==testdata$classe
-1-(sum(testdata$predRight)/dim(testdata)[1])</code></pre>
-<pre><code>## [1] 0.005098</code></pre>
+sum(testdata$predRight)/dim(testdata)[1]</code></pre>
+<pre><code>## [1] 0.9949</code></pre>
 </div>
 
 <div id="predicting-the-20-test-cases">
