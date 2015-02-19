@@ -5,7 +5,7 @@ output: html_document
 
 #### Executive Summary
 
-This document describes the practical steps to predict activity (column *classe* in the data) based on a large number of sensor measurements. Using the randomForest package on 70% of the training data results in a model with out of bound (OOB) expected error rate of 0.28. Cross validation on the remaining 30% results in an accuracy of 99.5%. All 20 values in the final test data were predicted correctly. 
+This document describes the practical steps to predict activity (column *classe* in the data) based on a large number of sensor measurements. Using the randomForest package on 70% of the training data results in a model with out of bound (OOB) expected error rate of 0.28%. Cross validation on the remaining 30% results in an accuracy of 99.5% (0.5% error rate). All 20 values in the final test data were predicted correctly. 
 
 #### Data and Data Cleaning
 
@@ -53,7 +53,7 @@ modFit
 ```{r}
 pred.test <- predict(modFit, testdata.stripped)
 testdata$predRight <- pred.test==testdata$classe
-1-(sum(testdata$predRight)/dim(testdata)[1])
+sum(testdata$predRight)/dim(testdata)[1]
 
 ```
 
