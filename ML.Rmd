@@ -1,0 +1,75 @@
+---
+title: "Machine Learning project"
+output: html_document
+---
+
+#### Executive Summary
+
+This document describes the practical steps to predict activity (column *classe* in the data) based on a large number of sensor measurements. Using the randomForest package on 70% of the training data results in a model with out of bound (OOB) expected error rate of 0.28. Cross validation on the remaining 30% results in an accuracy of 99.5%. All 20 values in the final test data were predicted correctly. 
+
+#### Data and Data Cleaning
+
+More information about the data can be found at http://groupware.les.inf.puc-rio.br/har .
+
+I removed all columns that had half or more values N/A or empty strings. I also removed names, timestamps, and the index (the first 5 columns), because intuitively they should not be used to predict an activity. There were still 55 mostly numerical columns left.
+
+#### Model
+
+The training data was split in two parts with 70% used for training the model. I built a simple model using the randomForest package using the default settings. The details of the model creation as well as the OOB estimate of error rate and confusion matrix show that the model seems precise (Appendix 1). Because of the low estimated error rate, no further refinements were necessary and cross validation was done next. 
+
+#### Cross Validation
+
+The 30% of the received training data that was not used to train the model was used for cross validation. The results were about 99.5% accurate, which indicated that the model was a good candidate to run the 20 final test cases (Appendix 2). All test cases were predicted correctly (Appendix 3).
+
+
+
+### Appendix
+
+#### 1) Creating a Model
+
+```{r}
+library(caret)
+library(randomForest)
+set.seed(12345)
+
+download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", "training.csv", "curl", quiet=T)
+data <- read.csv("training.csv", header=T)
+data <- data[,colSums(is.na(data) | data=="") < nrow(data)/2]
+data <- data[,-c(1,2,3,4,5)]
+dim(data)
+
+inTrain <- createDataPartition(y=data$classe, p=0.7, list=FALSE)
+traindata <- data[inTrain,]
+testdata <- data[-inTrain,]
+traindata.stripped <- traindata[,-dim(traindata)[2]]
+testdata.stripped <- testdata[,-dim(testdata)[2]]
+
+modFit <- randomForest(classe ~ ., data=traindata)
+modFit
+```
+
+#### 2) Cross Validation
+
+```{r}
+pred.test <- predict(modFit, testdata.stripped)
+testdata$predRight <- pred.test==testdata$classe
+1-(sum(testdata$predRight)/dim(testdata)[1])
+
+```
+
+#### 3) Predicting the 20 Test Cases
+
+```{r}
+download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", "test.csv", "curl", quiet=T)
+data <- read.csv("test.csv", header=T)
+data <- data[,colSums(is.na(data) | data=="") < nrow(data)/2]
+data <- data[,-c(1,2,3,4,5)]
+
+testdata.20 <- data[,-dim(data)[2]]
+testdata.20$new_window = factor(testdata.20$new_window, levels=c("no","yes"))
+pred.20 <- predict(modFit, testdata.20)
+pred.20
+
+```
+
+
