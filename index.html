@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Ml : This is a repository used for the project of the Machine Learning course in the Data Science Specialization on Coursera.">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Ml</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/michielkoens/ML">View on GitHub</a>
+
+          <h1 id="project_title">Ml</h1>
+          <h2 id="project_tagline">This is a repository used for the project of the Machine Learning course in the Data Science Specialization on Coursera.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/michielkoens/ML/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/michielkoens/ML/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p></p>
+
+<p></p>
+
+<p>
+
+
+</p>
+
+<p></p>Machine Learning project
+
+
+
+<p>
+
+</p>
+
+
+
+code{white-space: pre;}
+
+<p></p>
+
+
+
+
+  pre:not([class]) {
+    background-color: white;
+  }
+
+
+
+
+<p></p>
+
+<p></p>
+
+
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+<div>
+
+
+<div id="header">
+<h1>
+<a id="machine-learning-project" class="anchor" href="#machine-learning-project" aria-hidden="true"><span class="octicon octicon-link"></span></a>Machine Learning project</h1>
+</div>
+
+<div id="executive-summary">
+<h4>
+<a id="executive-summary" class="anchor" href="#executive-summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Executive Summary</h4>
+<p>This document describes the practical steps to predict activity (column <em>classe</em> in the data) based on a large number of sensor measurements. Using the randomForest package on 70% of the training data results in a model with out of bound (OOB) expected error rate of 0.28. Cross validation on the remaining 30% results in an accuracy of 99.5%. All 20 values in the final test data were predicted correctly.</p>
+</div>
+
+<div id="data-and-data-cleaning">
+<h4>
+<a id="data-and-data-cleaning" class="anchor" href="#data-and-data-cleaning" aria-hidden="true"><span class="octicon octicon-link"></span></a>Data and Data Cleaning</h4>
+<p>More information about the data can be found at <a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a> .</p>
+<p>I removed all columns that had half or more values N/A or empty strings. I also removed names, timestamps, and the index (the first 5 columns), because intuitively they should not be used to predict an activity. There were still 55 mostly numerical columns left.</p>
+</div>
+
+<div id="model">
+<h4>
+<a id="model" class="anchor" href="#model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Model</h4>
+<p>The training data was split in two parts with 70% used for training the model. I built a simple model using the randomForest package using the default settings. The details of the model creation as well as the OOB estimate of error rate and confusion matrix show that the model seems precise (Appendix 1). Because of the low estimated error rate, no further refinements were necessary and cross validation was done next.</p>
+</div>
+
+<div id="cross-validation">
+<h4>
+<a id="cross-validation" class="anchor" href="#cross-validation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cross Validation</h4>
+<p>The 30% of the received training data that was not used to train the model was used for cross validation. The results were about 99.5% accurate, which indicated that the model was a good candidate to run the 20 final test cases (Appendix 2). All test cases were predicted correctly (Appendix 3).</p>
+</div>
+
+<div id="appendix">
+<h3>
+<a id="appendix" class="anchor" href="#appendix" aria-hidden="true"><span class="octicon octicon-link"></span></a>Appendix</h3>
+<div id="creating-a-model">
+<h4>
+<a id="1-creating-a-model" class="anchor" href="#1-creating-a-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>1) Creating a Model</h4>
+<pre><code>library(caret)</code></pre>
+<pre><code>## Loading required package: lattice
+## Loading required package: ggplot2</code></pre>
+<pre><code>library(randomForest)</code></pre>
+<pre><code>## randomForest 4.6-10
+## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre><code>set.seed(12345)
+
+download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", "training.csv", "curl", quiet=T)
+data &lt;- read.csv("training.csv", header=T)
+data &lt;- data[,colSums(is.na(data) | data=="") &lt; nrow(data)/2]
+data &lt;- data[,-c(1,2,3,4,5)]
+dim(data)</code></pre>
+<pre><code>## [1] 19622    55</code></pre>
+<pre><code>inTrain &lt;- createDataPartition(y=data$classe, p=0.7, list=FALSE)
+traindata &lt;- data[inTrain,]
+testdata &lt;- data[-inTrain,]
+traindata.stripped &lt;- traindata[,-dim(traindata)[2]]
+testdata.stripped &lt;- testdata[,-dim(testdata)[2]]
+
+modFit &lt;- randomForest(classe ~ ., data=traindata)
+modFit</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(formula = classe ~ ., data = traindata) 
+##                Type of random forest: classification
+##                      Number of trees: 500
+## No. of variables tried at each split: 7
+## 
+##         OOB estimate of  error rate: 0.28%
+## Confusion matrix:
+##      A    B    C    D    E class.error
+## A 3904    1    0    0    1    0.000512
+## B    5 2650    3    0    0    0.003010
+## C    0    8 2386    2    0    0.004174
+## D    0    0   13 2238    1    0.006217
+## E    0    0    0    5 2520    0.001980</code></pre>
+</div>
+
+<div id="cross-validation-1">
+<h4>
+<a id="2-cross-validation" class="anchor" href="#2-cross-validation" aria-hidden="true"><span class="octicon octicon-link"></span></a>2) Cross Validation</h4>
+<pre><code>pred.test &lt;- predict(modFit, testdata.stripped)
+testdata$predRight &lt;- pred.test==testdata$classe
+1-(sum(testdata$predRight)/dim(testdata)[1])</code></pre>
+<pre><code>## [1] 0.005098</code></pre>
+</div>
+
+<div id="predicting-the-20-test-cases">
+<h4>
+<a id="3-predicting-the-20-test-cases" class="anchor" href="#3-predicting-the-20-test-cases" aria-hidden="true"><span class="octicon octicon-link"></span></a>3) Predicting the 20 Test Cases</h4>
+<pre><code>download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", "test.csv", "curl", quiet=T)
+data &lt;- read.csv("test.csv", header=T)
+data &lt;- data[,colSums(is.na(data) | data=="") &lt; nrow(data)/2]
+data &lt;- data[,-c(1,2,3,4,5)]
+
+testdata.20 &lt;- data[,-dim(data)[2]]
+testdata.20$new_window = factor(testdata.20$new_window, levels=c("no","yes"))
+pred.20 &lt;- predict(modFit, testdata.20)
+pred.20</code></pre>
+<pre><code>##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
+##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
+## Levels: A B C D E</code></pre>
+</div>
+
+<p></p>
+</div>
+
+<p></p>
+</div>
+
+
+
+
+
+
+
+<p>
+</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Ml maintained by <a href="https://github.com/michielkoens">michielkoens</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
