@@ -31,9 +31,7 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <p>&lt;!DOCTYPE html&gt;</p>
-
-<p></p>
+        <p></p>
 
 <p></p>
 
@@ -89,14 +87,15 @@ code{white-space: pre;}
 <div id="executive-summary">
 <h4>
 <a id="executive-summary" class="anchor" href="#executive-summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Executive Summary</h4>
-<p>This document describes the practical steps to predict activity (column <em>classe</em> in the data) based on a large number of sensor measurements. Using the randomForest package on 70% of the training data results in a model with out of bound (OOB) expected error rate of 0.28%. Cross validation on the remaining 30% results in an accuracy of 99.5% (0.5% error rate). All 20 values in the final test data were predicted correctly.</p>
+<p>This document describes the practical steps to predict exercise execution based on a large number of sensor measurements. Using the randomForest package on 70% of the training data results in a model with out of bound (OOB) expected error rate of 0.28%. Cross validation on the remaining 30% results in an accuracy of 99.5% (0.5% error rate). All 20 values in the final test data were predicted correctly.</p>
 </div>
 
 <div id="data-and-data-cleaning">
 <h4>
 <a id="data-and-data-cleaning" class="anchor" href="#data-and-data-cleaning" aria-hidden="true"><span class="octicon octicon-link"></span></a>Data and Data Cleaning</h4>
+<p>The data contains sensor measurements which are to be used to predict the quality of weight lifting execution (column <em>classe</em> in the data). The execution can be exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).</p>
 <p>More information about the data can be found at <a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a> .</p>
-<p>I removed all columns that had half or more values N/A or empty strings. I also removed names, timestamps, and the index (the first 5 columns), because intuitively they should not be used to predict an activity. There were still 55 mostly numerical columns left.</p>
+<p>I removed all columns that had half or more values N/A or empty strings. I also removed names, timestamps, and the data row number (the first 5 columns), because intuitively they should not be used to predict an activity. There were still 55 mostly numerical columns left.</p>
 </div>
 
 <div id="model">
@@ -127,16 +126,41 @@ code{white-space: pre;}
 
 download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", "training.csv", "curl", quiet=T)
 data &lt;- read.csv("training.csv", header=T)
+
+# remove columns with mostly NA or empty string
 data &lt;- data[,colSums(is.na(data) | data=="") &lt; nrow(data)/2]
-data &lt;- data[,-c(1,2,3,4,5)]
+# remove non-relevant columns
+names(data)</code></pre>
+<pre><code>##  [1] "X"                    "user_name"            "raw_timestamp_part_1"
+##  [4] "raw_timestamp_part_2" "cvtd_timestamp"       "new_window"          
+##  [7] "num_window"           "roll_belt"            "pitch_belt"          
+## [10] "yaw_belt"             "total_accel_belt"     "gyros_belt_x"        
+## [13] "gyros_belt_y"         "gyros_belt_z"         "accel_belt_x"        
+## [16] "accel_belt_y"         "accel_belt_z"         "magnet_belt_x"       
+## [19] "magnet_belt_y"        "magnet_belt_z"        "roll_arm"            
+## [22] "pitch_arm"            "yaw_arm"              "total_accel_arm"     
+## [25] "gyros_arm_x"          "gyros_arm_y"          "gyros_arm_z"         
+## [28] "accel_arm_x"          "accel_arm_y"          "accel_arm_z"         
+## [31] "magnet_arm_x"         "magnet_arm_y"         "magnet_arm_z"        
+## [34] "roll_dumbbell"        "pitch_dumbbell"       "yaw_dumbbell"        
+## [37] "total_accel_dumbbell" "gyros_dumbbell_x"     "gyros_dumbbell_y"    
+## [40] "gyros_dumbbell_z"     "accel_dumbbell_x"     "accel_dumbbell_y"    
+## [43] "accel_dumbbell_z"     "magnet_dumbbell_x"    "magnet_dumbbell_y"   
+## [46] "magnet_dumbbell_z"    "roll_forearm"         "pitch_forearm"       
+## [49] "yaw_forearm"          "total_accel_forearm"  "gyros_forearm_x"     
+## [52] "gyros_forearm_y"      "gyros_forearm_z"      "accel_forearm_x"     
+## [55] "accel_forearm_y"      "accel_forearm_z"      "magnet_forearm_x"    
+## [58] "magnet_forearm_y"     "magnet_forearm_z"     "classe"</code></pre>
+<pre><code>data &lt;- data[,-c(1,2,3,4,5)]
+# print remaining data set (before partitioning)
 dim(data)</code></pre>
 <pre><code>## [1] 19622    55</code></pre>
-<pre><code>inTrain &lt;- createDataPartition(y=data$classe, p=0.7, list=FALSE)
+<pre><code># split the data in train and test set
+inTrain &lt;- createDataPartition(y=data$classe, p=0.7, list=FALSE)
 traindata &lt;- data[inTrain,]
 testdata &lt;- data[-inTrain,]
-traindata.stripped &lt;- traindata[,-dim(traindata)[2]]
-testdata.stripped &lt;- testdata[,-dim(testdata)[2]]
 
+# create a model
 modFit &lt;- randomForest(classe ~ ., data=traindata)
 modFit</code></pre>
 <pre><code>## 
@@ -159,7 +183,13 @@ modFit</code></pre>
 <div id="cross-validation-1">
 <h4>
 <a id="2-cross-validation" class="anchor" href="#2-cross-validation" aria-hidden="true"><span class="octicon octicon-link"></span></a>2) Cross Validation</h4>
-<pre><code>pred.test &lt;- predict(modFit, testdata.stripped)
+<pre><code># remove the 'classe' column
+testdata.stripped &lt;- testdata[,-dim(testdata)[2]]
+
+# run the prediction
+pred.test &lt;- predict(modFit, testdata.stripped)
+
+# calculate the accuracy
 testdata$predRight &lt;- pred.test==testdata$classe
 sum(testdata$predRight)/dim(testdata)[1]</code></pre>
 <pre><code>## [1] 0.9949</code></pre>
@@ -170,11 +200,16 @@ sum(testdata$predRight)/dim(testdata)[1]</code></pre>
 <a id="3-predicting-the-20-test-cases" class="anchor" href="#3-predicting-the-20-test-cases" aria-hidden="true"><span class="octicon octicon-link"></span></a>3) Predicting the 20 Test Cases</h4>
 <pre><code>download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", "test.csv", "curl", quiet=T)
 data &lt;- read.csv("test.csv", header=T)
+
+# preprocess the data as before and remove the final column containing an index
 data &lt;- data[,colSums(is.na(data) | data=="") &lt; nrow(data)/2]
 data &lt;- data[,-c(1,2,3,4,5)]
-
 testdata.20 &lt;- data[,-dim(data)[2]]
+
+# correct one factor column which has only one value in the 20 test cases
 testdata.20$new_window = factor(testdata.20$new_window, levels=c("no","yes"))
+
+# predict
 pred.20 &lt;- predict(modFit, testdata.20)
 pred.20</code></pre>
 <pre><code>##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
