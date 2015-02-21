@@ -58,12 +58,13 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 
 <div id="executive-summary" class="section level4">
 <h4>Executive Summary</h4>
-<p>This document describes the practical steps to predict activity (column <em>classe</em> in the data) based on a large number of sensor measurements. Using the randomForest package on 70% of the training data results in a model with out of bound (OOB) expected error rate of 0.28%. Cross validation on the remaining 30% results in an accuracy of 99.5% (0.5% error rate). All 20 values in the final test data were predicted correctly.</p>
+<p>This document describes the practical steps to predict exercise execution based on a large number of sensor measurements. Using the randomForest package on 70% of the training data results in a model with out of bound (OOB) expected error rate of 0.28%. Cross validation on the remaining 30% results in an accuracy of 99.5% (0.5% error rate). All 20 values in the final test data were predicted correctly.</p>
 </div>
 <div id="data-and-data-cleaning" class="section level4">
 <h4>Data and Data Cleaning</h4>
+<p>The data contains sensor measurements which are to be used to predict the quality of weight lifting execution (column <em>classe</em> in the data). The execution can be exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).</p>
 <p>More information about the data can be found at <a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a> .</p>
-<p>I removed all columns that had half or more values N/A or empty strings. I also removed names, timestamps, and the index (the first 5 columns), because intuitively they should not be used to predict an activity. There were still 55 mostly numerical columns left.</p>
+<p>I removed all columns that had half or more values N/A or empty strings. I also removed names, timestamps, and the data row number (the first 5 columns), because intuitively they should not be used to predict an activity. There were still 55 mostly numerical columns left.</p>
 </div>
 <div id="model" class="section level4">
 <h4>Model</h4>
@@ -87,16 +88,41 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 
 download.file(&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;, &quot;training.csv&quot;, &quot;curl&quot;, quiet=T)
 data &lt;- read.csv(&quot;training.csv&quot;, header=T)
+
+# remove columns with mostly NA or empty string
 data &lt;- data[,colSums(is.na(data) | data==&quot;&quot;) &lt; nrow(data)/2]
-data &lt;- data[,-c(1,2,3,4,5)]
+# remove non-relevant columns
+names(data)</code></pre>
+<pre><code>##  [1] &quot;X&quot;                    &quot;user_name&quot;            &quot;raw_timestamp_part_1&quot;
+##  [4] &quot;raw_timestamp_part_2&quot; &quot;cvtd_timestamp&quot;       &quot;new_window&quot;          
+##  [7] &quot;num_window&quot;           &quot;roll_belt&quot;            &quot;pitch_belt&quot;          
+## [10] &quot;yaw_belt&quot;             &quot;total_accel_belt&quot;     &quot;gyros_belt_x&quot;        
+## [13] &quot;gyros_belt_y&quot;         &quot;gyros_belt_z&quot;         &quot;accel_belt_x&quot;        
+## [16] &quot;accel_belt_y&quot;         &quot;accel_belt_z&quot;         &quot;magnet_belt_x&quot;       
+## [19] &quot;magnet_belt_y&quot;        &quot;magnet_belt_z&quot;        &quot;roll_arm&quot;            
+## [22] &quot;pitch_arm&quot;            &quot;yaw_arm&quot;              &quot;total_accel_arm&quot;     
+## [25] &quot;gyros_arm_x&quot;          &quot;gyros_arm_y&quot;          &quot;gyros_arm_z&quot;         
+## [28] &quot;accel_arm_x&quot;          &quot;accel_arm_y&quot;          &quot;accel_arm_z&quot;         
+## [31] &quot;magnet_arm_x&quot;         &quot;magnet_arm_y&quot;         &quot;magnet_arm_z&quot;        
+## [34] &quot;roll_dumbbell&quot;        &quot;pitch_dumbbell&quot;       &quot;yaw_dumbbell&quot;        
+## [37] &quot;total_accel_dumbbell&quot; &quot;gyros_dumbbell_x&quot;     &quot;gyros_dumbbell_y&quot;    
+## [40] &quot;gyros_dumbbell_z&quot;     &quot;accel_dumbbell_x&quot;     &quot;accel_dumbbell_y&quot;    
+## [43] &quot;accel_dumbbell_z&quot;     &quot;magnet_dumbbell_x&quot;    &quot;magnet_dumbbell_y&quot;   
+## [46] &quot;magnet_dumbbell_z&quot;    &quot;roll_forearm&quot;         &quot;pitch_forearm&quot;       
+## [49] &quot;yaw_forearm&quot;          &quot;total_accel_forearm&quot;  &quot;gyros_forearm_x&quot;     
+## [52] &quot;gyros_forearm_y&quot;      &quot;gyros_forearm_z&quot;      &quot;accel_forearm_x&quot;     
+## [55] &quot;accel_forearm_y&quot;      &quot;accel_forearm_z&quot;      &quot;magnet_forearm_x&quot;    
+## [58] &quot;magnet_forearm_y&quot;     &quot;magnet_forearm_z&quot;     &quot;classe&quot;</code></pre>
+<pre class="r"><code>data &lt;- data[,-c(1,2,3,4,5)]
+# print remaining data set (before partitioning)
 dim(data)</code></pre>
 <pre><code>## [1] 19622    55</code></pre>
-<pre class="r"><code>inTrain &lt;- createDataPartition(y=data$classe, p=0.7, list=FALSE)
+<pre class="r"><code># split the data in train and test set
+inTrain &lt;- createDataPartition(y=data$classe, p=0.7, list=FALSE)
 traindata &lt;- data[inTrain,]
 testdata &lt;- data[-inTrain,]
-traindata.stripped &lt;- traindata[,-dim(traindata)[2]]
-testdata.stripped &lt;- testdata[,-dim(testdata)[2]]
 
+# create a model
 modFit &lt;- randomForest(classe ~ ., data=traindata)
 modFit</code></pre>
 <pre><code>## 
@@ -117,7 +143,13 @@ modFit</code></pre>
 </div>
 <div id="cross-validation-1" class="section level4">
 <h4>2) Cross Validation</h4>
-<pre class="r"><code>pred.test &lt;- predict(modFit, testdata.stripped)
+<pre class="r"><code># remove the 'classe' column
+testdata.stripped &lt;- testdata[,-dim(testdata)[2]]
+
+# run the prediction
+pred.test &lt;- predict(modFit, testdata.stripped)
+
+# calculate the accuracy
 testdata$predRight &lt;- pred.test==testdata$classe
 sum(testdata$predRight)/dim(testdata)[1]</code></pre>
 <pre><code>## [1] 0.9949</code></pre>
@@ -126,11 +158,16 @@ sum(testdata$predRight)/dim(testdata)[1]</code></pre>
 <h4>3) Predicting the 20 Test Cases</h4>
 <pre class="r"><code>download.file(&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;, &quot;test.csv&quot;, &quot;curl&quot;, quiet=T)
 data &lt;- read.csv(&quot;test.csv&quot;, header=T)
+
+# preprocess the data as before and remove the final column containing an index
 data &lt;- data[,colSums(is.na(data) | data==&quot;&quot;) &lt; nrow(data)/2]
 data &lt;- data[,-c(1,2,3,4,5)]
-
 testdata.20 &lt;- data[,-dim(data)[2]]
+
+# correct one factor column which has only one value in the 20 test cases
 testdata.20$new_window = factor(testdata.20$new_window, levels=c(&quot;no&quot;,&quot;yes&quot;))
+
+# predict
 pred.20 &lt;- predict(modFit, testdata.20)
 pred.20</code></pre>
 <pre><code>##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
