@@ -17,13 +17,13 @@ I removed all columns that had half or more values N/A or empty strings. I also 
 
 #### Model
 
-The training data was split in two parts with 70% used for training the model. I built a simple model using the randomForest package using the default settings. The details of the model creation as well as the OOB estimate of error rate and confusion matrix show that the model seems precise (Appendix 1). Because of the low estimated error rate, no further refinements were necessary and cross validation was done next. 
+The training data was split in two parts with 70% used for training the model. I built a simple model using the randomForest package using the default settings. The details of the model creation as well as the OOB estimate of error rate and confusion matrix show that the model seems precise (Appendix 1). Because of the low estimated error rate of 0.28% no further refinements were necessary, and cross validation was done with this model. 
 
 #### Cross Validation
 
-The 30% of the received training data that was not used to train the model was used for cross validation. The results were about 99.5% accurate, which indicated that the model was a good candidate to run the 20 final test cases (Appendix 2). All test cases were predicted correctly (Appendix 3).
+The 30% of the received training data that was not used to train the model was used for cross validation. The results were about 99.5% accurate (0.5% error rate), which indicated that the model was a good candidate to run the 20 final test cases (Appendix 2). All test cases were predicted correctly (Appendix 3).
 
-
+---------------
 
 ### Appendix
 
@@ -41,7 +41,7 @@ data <- read.csv("training.csv", header=T)
 data <- data[,colSums(is.na(data) | data=="") < nrow(data)/2]
 # remove non-relevant columns
 names(data)
-data <- data[,-c(1,2,3,4,5)]
+data <- data[,-c(1:5)]
 # print remaining data set (before partitioning)
 dim(data)
 
@@ -50,7 +50,7 @@ inTrain <- createDataPartition(y=data$classe, p=0.7, list=FALSE)
 traindata <- data[inTrain,]
 testdata <- data[-inTrain,]
 
-# create a model
+# create a model 
 modFit <- randomForest(classe ~ ., data=traindata)
 modFit
 ```
@@ -58,11 +58,8 @@ modFit
 #### 2) Cross Validation
 
 ```{r}
-# remove the 'classe' column
-testdata.stripped <- testdata[,-dim(testdata)[2]]
-
 # run the prediction
-pred.test <- predict(modFit, testdata.stripped)
+pred.test <- predict(modFit, testdata)
 
 # calculate the accuracy
 testdata$predRight <- pred.test==testdata$classe
@@ -74,12 +71,11 @@ sum(testdata$predRight)/dim(testdata)[1]
 
 ```{r}
 download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", "test.csv", "curl", quiet=T)
-data <- read.csv("test.csv", header=T)
+testdata.20 <- read.csv("test.csv", header=T)
 
-# preprocess the data as before and remove the final column containing an index
-data <- data[,colSums(is.na(data) | data=="") < nrow(data)/2]
-data <- data[,-c(1,2,3,4,5)]
-testdata.20 <- data[,-dim(data)[2]]
+# preprocess the data as before
+testdata.20 <- testdata.20[,colSums(is.na(testdata.20) | testdata.20=="") < nrow(testdata.20)/2]
+testdata.20 <- testdata.20[,-c(1:5)]
 
 # correct one factor column which has only one value in the 20 test cases
 testdata.20$new_window = factor(testdata.20$new_window, levels=c("no","yes"))
